@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" font-family="'JetBrains Mono', monospace">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#475569"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#a78bfa"/>
+    </marker>
+    <marker id="arrow-rose" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#fb7185"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="750" fill="#020617"/>
+  <rect width="1000" height="750" fill="url(#grid)"/>
+
+  <!-- ===================== ARROWS (drawn first, behind components) ===================== -->
+
+  <!-- Users → Front Door -->
+  <line x1="300" y1="55" x2="300" y2="108" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <text x="310" y="85" fill="#22d3ee" font-size="7" opacity="0.8">HTTPS</text>
+
+  <!-- Front Door → Container Apps -->
+  <line x1="300" y1="148" x2="300" y2="248" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+  <text x="310" y="200" fill="#fbbf24" font-size="7" opacity="0.8">HTTPS</text>
+
+  <!-- Container Apps → Azure OpenAI -->
+  <line x1="420" y1="278" x2="560" y2="278" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="465" y="271" fill="#34d399" font-size="7" opacity="0.8">gRPC</text>
+
+  <!-- Container Apps → Cosmos DB -->
+  <line x1="300" y1="308" x2="300" y2="388" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <text x="310" y="352" fill="#a78bfa" font-size="7" opacity="0.8">TCP/443</text>
+
+  <!-- Container Apps → Key Vault -->
+  <line x1="180" y1="298" x2="100" y2="360" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-rose)"/>
+  <text x="110" y="330" fill="#fb7185" font-size="7" opacity="0.8">OAuth</text>
+
+  <!-- VM → Azure OpenAI -->
+  <line x1="200" y1="500" x2="610" y2="310" stroke="#34d399" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-emerald)" opacity="0.5"/>
+  <text x="400" y="395" fill="#34d399" font-size="7" opacity="0.5">gRPC</text>
+
+  <!-- VM → Cosmos DB -->
+  <line x1="180" y1="490" x2="290" y2="440" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-violet)" opacity="0.5"/>
+  <text x="220" y="460" fill="#a78bfa" font-size="7" opacity="0.5">TCP</text>
+
+  <!-- VM → Key Vault -->
+  <line x1="140" y1="490" x2="90" y2="410" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-rose)" opacity="0.5"/>
+
+  <!-- Container Apps → GitHub -->
+  <line x1="250" y1="308" x2="550" y2="620" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-slate)"/>
+  <text x="420" y="480" fill="#94a3b8" font-size="7" opacity="0.8">HTTPS</text>
+
+  <!-- Front Door ← WeChat Gateway -->
+  <line x1="780" y1="620" x2="380" y2="148" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-slate)" opacity="0.6"/>
+  <text x="600" y="370" fill="#94a3b8" font-size="7" opacity="0.6">HTTPS</text>
+
+  <!-- Monitor watching Container Apps -->
+  <line x1="760" y1="180" x2="420" y2="268" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="580" y="218" fill="#fbbf24" font-size="7" opacity="0.5">telemetry</text>
+
+  <!-- Monitor watching VM -->
+  <line x1="760" y1="200" x2="240" y2="490" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" opacity="0.3"/>
+
+  <!-- ===================== BOUNDARIES ===================== -->
+
+  <!-- Azure Region boundary -->
+  <rect x="30" y="95" width="920" height="470" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.4"/>
+  <text x="50" y="112" fill="#fbbf24" font-size="9" font-weight="600" opacity="0.6">Azure Region (East US 2)</text>
+
+  <!-- Security Group boundary -->
+  <rect x="55" y="230" width="410" height="310" rx="8" fill="none" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,4" opacity="0.3"/>
+  <text x="70" y="246" fill="#fb7185" font-size="7" opacity="0.5">🔒 Security Group / VNet</text>
+
+  <!-- ===================== COMPONENTS ===================== -->
+
+  <!-- Users -->
+  <rect x="180" y="20" width="240" height="35" rx="6" fill="#0f172a"/>
+  <rect x="180" y="20" width="240" height="35" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="300" y="37" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">👤 Users</text>
+  <text x="300" y="49" fill="#94a3b8" font-size="7" text-anchor="middle">Browser / Mobile / WeChat</text>
+
+  <!-- Azure Front Door -->
+  <rect x="190" y="110" width="220" height="40" rx="6" fill="#0f172a"/>
+  <rect x="190" y="110" width="220" height="40" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="300" y="130" fill="#fbbf24" font-size="11" font-weight="600" text-anchor="middle">Azure Front Door</text>
+  <text x="300" y="143" fill="#94a3b8" font-size="7" text-anchor="middle">CDN + WAF + Load Balancer</text>
+
+  <!-- Container Apps (OpenClaw) -->
+  <rect x="180" y="250" width="240" height="60" rx="6" fill="#0f172a"/>
+  <rect x="180" y="250" width="240" height="60" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="300" y="274" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">🐙 Container Apps</text>
+  <text x="300" y="287" fill="#94a3b8" font-size="8" text-anchor="middle">OpenClaw Agent Runtime</text>
+  <text x="300" y="300" fill="#64748b" font-size="7" text-anchor="middle">Hermes + Skills + MCP</text>
+
+  <!-- Azure OpenAI Service -->
+  <rect x="560" y="250" width="200" height="55" rx="6" fill="#0f172a"/>
+  <rect x="560" y="250" width="200" height="55" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="660" y="272" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">Azure OpenAI Service</text>
+  <text x="660" y="285" fill="#94a3b8" font-size="7" text-anchor="middle">GPT-4o / GPT-Image</text>
+  <text x="660" y="297" fill="#64748b" font-size="7" text-anchor="middle">LLM Inference</text>
+
+  <!-- Cosmos DB -->
+  <rect x="220" y="390" width="200" height="50" rx="6" fill="#0f172a"/>
+  <rect x="220" y="390" width="200" height="50" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="320" y="411" fill="#a78bfa" font-size="10" font-weight="600" text-anchor="middle">Azure Cosmos DB</text>
+  <text x="320" y="425" fill="#94a3b8" font-size="7" text-anchor="middle">Session & Memory Storage</text>
+
+  <!-- Key Vault -->
+  <rect x="55" y="360" width="130" height="50" rx="6" fill="#0f172a"/>
+  <rect x="55" y="360" width="130" height="50" rx="6" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="120" y="381" fill="#fb7185" font-size="10" font-weight="600" text-anchor="middle">🔑 Key Vault</text>
+  <text x="120" y="395" fill="#94a3b8" font-size="7" text-anchor="middle">Secrets & Creds</text>
+
+  <!-- Azure VM -->
+  <rect x="80" y="490" width="200" height="45" rx="6" fill="#0f172a"/>
+  <rect x="80" y="490" width="200" height="45" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="180" y="510" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">Azure VM (B4ms)</text>
+  <text x="180" y="524" fill="#94a3b8" font-size="7" text-anchor="middle">Dev/Test Environment</text>
+
+  <!-- Azure Monitor -->
+  <rect x="760" y="150" width="170" height="55" rx="6" fill="#0f172a"/>
+  <rect x="760" y="150" width="170" height="55" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="845" y="173" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">📊 Azure Monitor</text>
+  <text x="845" y="187" fill="#94a3b8" font-size="7" text-anchor="middle">+ Log Analytics</text>
+  <text x="845" y="199" fill="#64748b" font-size="7" text-anchor="middle">Observability</text>
+
+  <!-- GitHub -->
+  <rect x="480" y="600" width="200" height="50" rx="6" fill="#0f172a"/>
+  <rect x="480" y="600" width="200" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="580" y="621" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">⚡ GitHub</text>
+  <text x="580" y="635" fill="#64748b" font-size="7" text-anchor="middle">Copilot LLM + Code Repos</text>
+
+  <!-- WeChat Gateway -->
+  <rect x="710" y="600" width="190" height="50" rx="6" fill="#0f172a"/>
+  <rect x="710" y="600" width="190" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="805" y="621" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">💬 WeChat Gateway</text>
+  <text x="805" y="635" fill="#64748b" font-size="7" text-anchor="middle">Message Bridge</text>
+
+  <!-- External label -->
+  <text x="500" y="595" fill="#64748b" font-size="8" text-anchor="middle">── External Services ──</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <rect x="560" y="400" width="370" height="130" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="580" y="420" fill="#f8fafc" font-size="9" font-weight="600">Legend</text>
+
+  <rect x="580" y="430" width="14" height="10" rx="2" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="600" y="439" fill="#94a3b8" font-size="8">Frontend / Users</text>
+
+  <rect x="580" y="448" width="14" height="10" rx="2" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1"/>
+  <text x="600" y="457" fill="#94a3b8" font-size="8">Backend / Agent</text>
+
+  <rect x="580" y="466" width="14" height="10" rx="2" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="600" y="475" fill="#94a3b8" font-size="8">Database</text>
+
+  <rect x="580" y="484" width="14" height="10" rx="2" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="600" y="493" fill="#94a3b8" font-size="8">Azure / Cloud</text>
+
+  <rect x="580" y="502" width="14" height="10" rx="2" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1"/>
+  <text x="600" y="511" fill="#94a3b8" font-size="8">Security</text>
+
+  <rect x="740" y="430" width="14" height="10" rx="2" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1"/>
+  <text x="760" y="439" fill="#94a3b8" font-size="8">External</text>
+
+  <line x1="740" y1="455" x2="770" y2="455" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="778" y="458" fill="#94a3b8" font-size="8">Data flow</text>
+
+  <line x1="740" y1="472" x2="770" y2="472" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="778" y="475" fill="#94a3b8" font-size="8">Secure / Auth flow</text>
+
+  <line x1="740" y1="489" x2="770" y2="489" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  <text x="778" y="492" fill="#94a3b8" font-size="8">Telemetry</text>
+
+</svg>

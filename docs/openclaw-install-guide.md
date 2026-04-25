@@ -1,279 +1,357 @@
-# OpenClaw 安装与配置指南
+# OpenClaw 安装指南
 
-> 🕐 预计用时：40 分钟 | 动手实验
+> 本指南适用于在 Azure VM 上安装和配置 OpenClaw Agent 环境。
 
 ---
 
-## 1. 前置条件
+## 目录
 
-开始之前，请确认以下环境已就绪：
+1. [Azure VM 环境准备](#1-azure-vm-环境准备)
+2. [安装 OpenClaw](#2-安装-openclaw)
+3. [GitHub Copilot 认证配置](#3-github-copilot-认证配置)
+4. [微信集成配置](#4-微信集成配置)
+5. [基础 Agent 操作](#5-基础-agent-操作)
+6. [故障排查](#6-故障排查)
 
-| 项目 | 要求 |
-|------|------|
-| Azure VM | Ubuntu 24.04 LTS, **Standard_B4ms** (4 vCPU / 16 GB) |
-| GitHub 账号 | 已开通 **GitHub Copilot** 订阅 |
-| 微信客户端 | iOS **8.0.70+** 或 Android 最新版 |
+---
 
-确认 VM 可通过 SSH 访问：
+## 1. Azure VM 环境准备
+
+### 1.1 创建 VM
 
 ```bash
+# 登录 Azure
+az login
+
+# 创建资源组
+az group create --name rg-openclaw-workshop --location eastasia
+
+# 创建 VM（推荐 B4ms：4核16G）
+az vm create \
+  --resource-group rg-openclaw-workshop \
+  --name vm-openclaw-dev \
+  --image Ubuntu2404 \
+  --size Standard_B4ms \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --public-ip-sku Standard
+
+# 开放 SSH 端口
+az vm open-port --resource-group rg-openclaw-workshop --name vm-openclaw-dev --port 22
+```
+
+### 1.2 连接 VM
+
+```bash
+# 获取 VM 公网 IP
+az vm show -d -g rg-openclaw-workshop -n vm-openclaw-dev --query publicIps -o tsv
+
+# SSH 连接
 ssh azureuser@<YOUR_VM_IP>
+```
+
+### 1.3 系统环境配置
+
+```bash
+# 更新系统
+sudo apt update && sudo apt upgrade -y
+
+# 安装基础依赖
+sudo apt install -y curl git build-essential
+
+# 安装 Node.js 20.x
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# 验证
+node --version   # 应输出 v20.x.x
+npm --version    # 应输出 10.x.x
+
+# 安装 Python 3.11+（部分功能需要）
+sudo apt install -y python3 python3-pip python3-venv
 ```
 
 ---
 
 ## 2. 安装 OpenClaw
 
-### 2.1 一键安装
+### 2.1 NPM 全局安装
 
 ```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-```
+# 安装 OpenClaw CLI
+sudo npm install -g @anthropic/openclaw
 
-### 2.2 配置 PATH
-
-安装脚本会提示你添加 PATH，执行：
-
-```bash
-echo 'export PATH="$HOME/.openclaw/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-验证安装：
-
-```bash
+# 验证安装
 openclaw --version
 ```
 
-### 2.3 基础配置
+### 2.2 从源码安装（可选）
 
 ```bash
-# 设置为本地网关模式
-openclaw config set gateway.mode local
-
-# 设置默认模型
-openclaw config set agents.defaults.model.primary 'github-copilot/gpt-5.4'
+git clone https://github.com/anthropic/openclaw.git
+cd openclaw
+npm install
+npm run build
+npm link
 ```
 
-### 2.4 启动守护进程
+### 2.3 初始化配置
 
 ```bash
-openclaw daemon install && openclaw daemon start
+# 初始化配置目录
+openclaw init
+
+# 配置文件位于 ~/.openclaw/config.yaml
+cat ~/.openclaw/config.yaml
 ```
 
-检查状态：
+默认配置示例：
 
-```bash
-openclaw daemon status
-```
-
-> ✅ 看到 `running` 即表示成功。
-
----
-
-## 3. 认证 GitHub Copilot
-
-### 3.1 启动设备码认证
-
-```bash
-openclaw models auth login-github-copilot
-```
-
-终端会输出类似信息：
-
-```
-请访问 https://github.com/login/device
-输入代码: ABCD-1234
-```
-
-### 3.2 完成认证
-
-1. 在浏览器打开 `https://github.com/login/device`
-2. 输入终端显示的设备码
-3. 点击 **Authorize** 授权
-4. 回到终端，等待认证完成
-
-### 3.3 设置默认模型
-
-```bash
-openclaw models set github-copilot/gpt-5.4
-```
-
-验证：
-
-```bash
-openclaw models list
-```
-
-> ✅ 应看到 `github-copilot/gpt-5.4` 标记为 `active`。
-
----
-
-## 4. HTTPS 访问（Caddy 方案）
-
-微信要求 HTTPS 连接，我们用 Caddy 做反向代理。
-
-### 4.1 安装 Caddy
-
-```bash
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update && sudo apt install -y caddy
-```
-
-### 4.2 生成自签名证书
-
-```bash
-mkdir -p ~/certs
-openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
-  -keyout ~/certs/key.pem -out ~/certs/cert.pem \
-  -subj "/CN=$(hostname -I | awk '{print $1}')"
-```
-
-### 4.3 配置 Caddyfile
-
-```bash
-sudo tee /etc/caddy/Caddyfile > /dev/null <<'EOF'
-{
-    auto_https off
-}
-
-:443 {
-    tls /home/azureuser/certs/cert.pem /home/azureuser/certs/key.pem
-    reverse_proxy localhost:5800
-}
-EOF
-```
-
-重启 Caddy：
-
-```bash
-sudo systemctl restart caddy
-```
-
-### 4.4 绑定 LAN 访问
-
-```bash
-openclaw config set gateway.bind lan
-openclaw daemon restart
-```
-
-> ⚠️ 确保 Azure NSG 已放行 **443** 端口。
-
----
-
-## 5. 连接微信
-
-### 5.1 安装微信插件
-
-```bash
-openclaw plugins install '@tencent-weixin/openclaw-weixin'
-```
-
-### 5.2 启用插件
-
-```bash
-openclaw config set plugins.entries.openclaw-weixin.enabled true
-```
-
-### 5.3 扫码登录
-
-```bash
-openclaw channels login --channel openclaw-weixin
-```
-
-终端会显示一个二维码。
-
-**扫码技巧：**
-
-- 📱 用微信「扫一扫」扫描终端二维码
-- 如果终端二维码显示不清晰，放大终端窗口或缩小字体
-- 二维码有效期约 **60 秒**，过期后按回车刷新
-- 扫码后在手机上点击 **确认登录**
-
----
-
-## 6. 验证测试
-
-### 6.1 检查通道状态
-
-```bash
-openclaw channels list
-```
-
-> ✅ `openclaw-weixin` 状态应为 `connected`。
-
-### 6.2 发送测试消息
-
-1. 打开微信，找到 **文件传输助手** 或任意好友对话
-2. 向已登录的微信账号发送：`你好`
-3. 如果收到 AI 回复，说明配置成功 🎉
-
-也可以用命令行测试：
-
-```bash
-openclaw chat "你好，请做个自我介绍"
+```yaml
+# ~/.openclaw/config.yaml
+model:
+  provider: github-copilot  # 或 azure-openai, anthropic
+  name: claude-sonnet-4-20250514
+tools:
+  terminal: true
+  file_operations: true
+  web_search: true
+logging:
+  level: info
+  path: ~/.openclaw/logs/
 ```
 
 ---
 
-## 7. 常见问题排查
+## 3. GitHub Copilot 认证配置
 
-### `openclaw: command not found`
+### 3.1 前置条件
 
-PATH 未生效，执行：
+- 有效的 GitHub 账号
+- 已订阅 GitHub Copilot（Individual 或 Business）
 
-```bash
-source ~/.bashrc
-# 或手动指定
-~/.openclaw/bin/openclaw --version
-```
-
-### 二维码过期
+### 3.2 认证步骤
 
 ```bash
-# 重新登录即可
-openclaw channels login --channel openclaw-weixin
+# 方式一：交互式登录（推荐）
+openclaw auth login --provider github-copilot
+# 按提示在浏览器中完成 OAuth 授权
+
+# 方式二：使用 Token
+export GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxx"
+openclaw auth login --provider github-copilot --token $GITHUB_TOKEN
+
+# 验证认证状态
+openclaw auth status
 ```
 
-> 💡 提前放大终端窗口，准备好微信扫一扫再执行命令。
+预期输出：
+```
+✅ Provider: GitHub Copilot
+✅ Status: Authenticated
+✅ Model: claude-sonnet-4-20250514
+✅ Expires: 2026-05-25T14:00:00Z
+```
 
-### 502 Bad Gateway
-
-Caddy 无法连接 OpenClaw 后端：
+### 3.3 使用 Azure OpenAI（替代方案）
 
 ```bash
-# 检查守护进程是否运行
-openclaw daemon status
+# 配置 Azure OpenAI
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+export AZURE_OPENAI_API_KEY="your-api-key"
+export AZURE_OPENAI_DEPLOYMENT="gpt-4o"
 
-# 查看日志
-openclaw daemon logs --tail 50
-
-# 重启
-openclaw daemon restart
+openclaw auth login --provider azure-openai
 ```
-
-确认端口 5800 在监听：
-
-```bash
-ss -tlnp | grep 5800
-```
-
-### disconnected 1006 (WebSocket 断开)
-
-通常是网络不稳定或微信长连接超时：
-
-```bash
-# 查看通道状态
-openclaw channels list
-
-# 重新登录
-openclaw channels login --channel openclaw-weixin
-```
-
-如果频繁断开，检查 Azure VM 的网络安全组规则，确保出站连接不受限。
 
 ---
 
-> 🎓 安装完成！如有问题请举手示意讲师。
+## 4. 微信集成配置
+
+### 4.1 安装微信 Bot 组件
+
+```bash
+# 安装 wechaty 依赖
+npm install -g wechaty wechaty-puppet-wechat
+
+# 安装 OpenClaw 微信插件
+openclaw plugin install wechat-bridge
+```
+
+### 4.2 配置微信桥接
+
+```yaml
+# 在 ~/.openclaw/config.yaml 中添加
+wechat:
+  enabled: true
+  puppet: wechaty-puppet-wechat
+  allowed_users:
+    - "微信好友备注名1"
+    - "微信好友备注名2"
+  allowed_groups:
+    - "技术团队群"
+  auto_reply: true
+  max_context_messages: 20
+```
+
+### 4.3 启动微信桥接
+
+```bash
+# 启动微信桥接服务
+openclaw wechat start
+
+# 扫描终端二维码完成微信登录
+# 登录成功后，在微信中发送消息即可与 Agent 交互
+```
+
+### 4.4 微信交互示例
+
+在微信中发送：
+```
+@OpenClaw 帮我查看服务器 CPU 使用率
+```
+
+Agent 会自动执行命令并返回结果。
+
+---
+
+## 5. 基础 Agent 操作
+
+### 5.1 交互模式
+
+```bash
+# 启动交互式会话
+openclaw chat
+
+# 单次任务模式
+openclaw chat "创建一个 Flask API 项目结构"
+
+# 指定工作目录
+openclaw chat --workdir /home/azureuser/projects "分析这个项目的代码结构"
+```
+
+### 5.2 常用操作示例
+
+```bash
+# 文件操作
+openclaw chat "读取 config.yaml 并解释每个配置项"
+
+# 代码生成
+openclaw chat "用 Python 写一个 Azure Blob Storage 上传工具"
+
+# 代码审查
+openclaw chat "审查 src/ 目录下的代码，找出安全问题"
+
+# 系统管理
+openclaw chat "检查磁盘使用情况，如果超过80%则清理日志文件"
+
+# 研究任务
+openclaw chat "调研 Azure Container Apps 的最新功能，生成报告"
+```
+
+### 5.3 会话管理
+
+```bash
+# 查看历史会话
+openclaw sessions list
+
+# 恢复上次会话
+openclaw sessions resume <session-id>
+
+# 导出会话记录
+openclaw sessions export <session-id> --format markdown -o session.md
+```
+
+---
+
+## 6. 故障排查
+
+### 问题 1: 安装失败 — npm 权限错误
+
+```bash
+# 症状：EACCES permission denied
+# 解决：
+sudo chown -R $(whoami) ~/.npm
+npm install -g @anthropic/openclaw
+```
+
+### 问题 2: 认证失败
+
+```bash
+# 症状：Authentication failed
+# 排查步骤：
+openclaw auth status          # 检查认证状态
+openclaw auth logout          # 清除旧认证
+openclaw auth login --provider github-copilot  # 重新认证
+
+# 检查 Token 是否过期
+curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user
+```
+
+### 问题 3: Agent 响应超时
+
+```bash
+# 症状：Request timeout
+# 解决方案：
+# 1. 检查网络连接
+curl -v https://api.githubcopilot.com
+
+# 2. 增加超时时间
+openclaw config set timeout 120
+
+# 3. 检查代理配置
+export HTTPS_PROXY=http://proxy:port
+```
+
+### 问题 4: 微信登录失败
+
+```bash
+# 症状：QR Code 扫描后无反应
+# 解决方案：
+# 1. 确认使用个人微信号（非企业微信）
+# 2. 清除缓存
+rm -rf ~/.wechaty/
+
+# 3. 重启服务
+openclaw wechat stop
+openclaw wechat start
+```
+
+### 问题 5: Node.js 版本不兼容
+
+```bash
+# 症状：SyntaxError: Unexpected token
+# 解决：升级到 Node.js 20+
+sudo n install 20
+# 或使用 nvm
+nvm install 20
+nvm use 20
+```
+
+### 日志查看
+
+```bash
+# 查看 Agent 日志
+tail -f ~/.openclaw/logs/agent.log
+
+# 查看微信桥接日志
+tail -f ~/.openclaw/logs/wechat.log
+
+# 调试模式启动
+openclaw chat --debug "测试任务"
+```
+
+---
+
+## 快速检查清单
+
+```bash
+# 一键环境检查脚本
+echo "=== 环境检查 ==="
+echo "Node.js: $(node --version 2>/dev/null || echo '未安装')"
+echo "npm: $(npm --version 2>/dev/null || echo '未安装')"
+echo "OpenClaw: $(openclaw --version 2>/dev/null || echo '未安装')"
+echo "认证状态: $(openclaw auth status 2>/dev/null || echo '未配置')"
+echo "磁盘空间: $(df -h / | tail -1 | awk '{print $4}') 可用"
+echo "内存: $(free -h | grep Mem | awk '{print $7}') 可用"
+```

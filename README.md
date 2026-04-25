@@ -1,92 +1,81 @@
-# AI Agent Workshop
+# 🤖 OpenClaw on Azure Workshop
 
-> 🤖 一个 2 小时的 AI Agent 动手实践工作坊
+> AI Agent 实战工作坊 — 在 Azure 上部署和使用 OpenClaw 智能体
 
-## 概述
+## 📌 概览
 
-本 Workshop 共 **2 小时**，分为 **3 个 Session**：
+| 项目 | 说明 |
+|------|------|
+| **时长** | 2小时 |
+| **受众** | 技术团队（开发、运维、架构师） |
+| **前置要求** | Azure 账号、GitHub 账号、基础命令行经验 |
+| **目标** | 理解 AI Agent，掌握 OpenClaw 安装与 Azure 生产部署 |
 
-| Session | 主题 | 时长 |
-|---------|------|------|
-| Session 1 | AI Agent 基础概念与架构 | ~30 min |
-| Session 2 | 动手构建你的第一个 Agent | ~50 min |
-| Session 3 | 高级技巧与实战演练 | ~40 min |
-
-## 目录结构
+## 📂 仓库结构
 
 ```
 agent-workshop/
-├── README.md          # 本文件
-├── slides/            # 演示幻灯片
-│   ├── session1.pdf
-│   ├── session2.pdf
-│   └── session3.pdf
-├── docs/              # 详细文档与参考资料
-│   ├── setup.md       # 环境配置指南
-│   ├── session1.md    # Session 1 讲义
-│   ├── session2.md    # Session 2 讲义
-│   └── session3.md    # Session 3 讲义
-└── examples/          # 示例代码
+├── README.md                              # 本文件
+└── docs/
+    ├── demo-script.md                     # 讲师演示脚本（2小时完整流程）
+    ├── openclaw-install-guide.md          # OpenClaw 安装与配置指南
+    ├── azure-deployment-guide.md          # Azure 生产部署最佳实践
+    └── azure-deploy-scripts.sh            # Azure 资源一键部署脚本
 ```
 
-## 前置要求
+## 🎯 Workshop 议程
 
-开始之前，请确保你已准备好以下环境：
+| 时间 | 环节 | 内容 |
+|------|------|------|
+| 0:00-0:30 | Session 1 | AI Agent vs LLM 深度分析、现场对比演示、小组讨论 |
+| 0:30-1:10 | Session 2 | Agent 日常场景：代码审查、研究自动化、DevOps、微信集成 |
+| 1:10-1:40 | Session 3 | OpenClaw 安装实操 Hands-on Lab |
+| 1:40-2:00 | Session 4 | OpenClaw on Azure 最佳实践、架构与成本优化 |
 
-### 1. Azure VM
+## 🚀 快速开始
 
-- 已分配的 Azure 虚拟机（Ubuntu）
-- SSH 访问权限
-- 确认可以正常连接：`ssh azureuser@<your-vm-ip>`
-
-### 2. GitHub Copilot
-
-- 已激活的 GitHub Copilot 许可证
-- VS Code 或 JetBrains IDE 中已安装 GitHub Copilot 插件
-- 确认 Copilot Chat 功能可用
-
-### 3. 微信 (WeChat)
-
-- 用于接收 Workshop 通知和实时互动
-- 请扫码加入 Workshop 交流群
-
-## 使用方法
-
-### 克隆仓库
+### 讲师准备
 
 ```bash
-git clone https://github.com/your-org/agent-workshop.git
-cd agent-workshop
+# 1. 克隆仓库
+git clone <repo-url> && cd agent-workshop
+
+# 2. 部署学员 VM 环境
+chmod +x docs/azure-deploy-scripts.sh
+./docs/azure-deploy-scripts.sh
+
+# 3. 按 docs/demo-script.md 进行彩排
 ```
 
-### 查看幻灯片
-
-幻灯片位于 `slides/` 目录，可直接打开 PDF 文件。
-
-### 跟随文档操作
+### 学员操作
 
 ```bash
-# 查看环境配置指南
-cat docs/setup.md
+# 1. 连接分配的 Azure VM
+ssh azureuser@<your-vm-ip>
 
-# 按 Session 顺序阅读讲义
-cat docs/session1.md
-cat docs/session2.md
-cat docs/session3.md
+# 2. 按 docs/openclaw-install-guide.md 完成安装
+
+# 3. 开始使用
+openclaw chat "你好，请介绍你的能力"
 ```
 
-### 运行示例
+## 📖 文档说明
 
-```bash
-cd examples/
-# 按照各 Session 讲义中的说明运行
-```
+| 文档 | 用途 | 受众 |
+|------|------|------|
+| [演示脚本](docs/demo-script.md) | 完整的2小时 Workshop 引导脚本 | 讲师 |
+| [安装指南](docs/openclaw-install-guide.md) | VM 环境准备、安装、认证、微信集成 | 学员 |
+| [Azure 部署指南](docs/azure-deployment-guide.md) | 生产环境架构、Bicep 模板、安全与扩展 | 架构师/运维 |
+| [部署脚本](docs/azure-deploy-scripts.sh) | 一键创建所有 Azure 资源 | 运维/讲师 |
 
-## 常见问题
+## ⚙️ 技术栈
 
-- **无法连接 Azure VM？** 检查 NSG 规则是否开放了 SSH 端口。
-- **Copilot 无响应？** 确认插件版本为最新，并重新登录 GitHub 账号。
+- **Agent 框架**: OpenClaw
+- **云平台**: Microsoft Azure
+- **核心服务**: Azure VM、Container Apps、Cosmos DB、Key Vault、Front Door、Azure Monitor
+- **AI 模型**: GitHub Copilot / Azure OpenAI (GPT-4o, Claude)
+- **集成**: WeChat (微信)
 
-## License
+## 📝 License
 
-MIT License. 详见 [LICENSE](LICENSE) 文件。
+MIT

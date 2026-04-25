@@ -1,364 +1,297 @@
 const pptxgen = require("pptxgenjs");
-const pptx = new pptxgen();
+const fs = require("fs");
 
-pptx.layout = "LAYOUT_16x9";
-pptx.author = "AI Agent Workshop";
-pptx.title = "AI Agent Workshop";
+const pres = new pptxgen();
+pres.layout = "LAYOUT_WIDE";
 
-// Colors
-const C = {
-  deep: "065A82",
-  teal: "1C7293",
-  mid: "21295C",
-  white: "FFFFFF",
-  light: "F0F4F8",
-  gray: "E8ECF1",
-  darkText: "1A1A2E",
-  subText: "4A5568",
-  accent: "48BB78",
-  orange: "ED8936",
-  purple: "805AD5",
-};
+const C = { primary: "065A82", secondary: "1C7293", accent: "02C39A", dark: "0B1829", light: "F0F4F8", white: "FFFFFF" };
+const bgDark = { fill: C.dark };
+const bgLight = { fill: C.light };
+const darkText = { color: C.dark };
+const lightText = { color: C.white };
 
-// Helper: dark divider slide
-function addDivider(title, subtitle, icon) {
-  const slide = pptx.addSlide();
-  slide.background = { fill: C.mid };
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: "100%", h: "100%", fill: { type: "solid", color: C.mid } });
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 2.2, w: 2, h: 0.08, fill: { type: "solid", color: C.teal } });
-  if (icon) {
-    slide.addText(icon, { x: 4, y: 0.8, w: 2, h: 1, fontSize: 48, color: C.teal, align: "center" });
-  }
-  slide.addText(title, { x: 0.5, y: 2.5, w: 9, h: 1.2, fontSize: 36, fontFace: "Georgia", color: C.white, bold: true });
-  slide.addText(subtitle, { x: 0.5, y: 3.7, w: 9, h: 0.8, fontSize: 18, fontFace: "Calibri", color: C.teal });
-  return slide;
+function addSlide(bg, notes) {
+  const s = pres.addSlide();
+  s.background = bg;
+  if (notes) s.addNotes(notes);
+  // accent bar at bottom
+  s.addShape(pres.ShapeType ? pres.ShapeType.rect : "rect", { x: 0, y: 7.0, w: 13.33, h: 0.15, fill: { color: C.accent } });
+  return s;
 }
 
-// Helper: content slide with title
-function addContent(title) {
-  const slide = pptx.addSlide();
-  slide.background = { fill: C.light };
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 0, y: 0, w: "100%", h: 1.1, fill: { type: "solid", color: C.deep } });
-  slide.addText(title, { x: 0.5, y: 0.15, w: 9, h: 0.8, fontSize: 24, fontFace: "Georgia", color: C.white, bold: true });
-  // Accent line
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 1.1, w: 1.5, h: 0.06, fill: { type: "solid", color: C.teal } });
-  return slide;
-}
+// Slide 1 - Title
+let s = addSlide(bgDark, "欢迎各位参加 OpenClaw on Azure 实战工作坊，本次工作坊共2小时，涵盖AI Agent概念、实战场景、安装实操和Azure最佳实践。");
+s.addText("OpenClaw on Azure", { x: 1, y: 1.8, w: 11, h: 1.5, fontSize: 48, bold: true, color: C.white, align: "center" });
+s.addText("AI Agent 实战工作坊 | 2小时", { x: 1, y: 3.3, w: 11, h: 0.8, fontSize: 24, color: C.accent, align: "center" });
+s.addText("🤖  🚀  ☁️", { x: 1, y: 4.3, w: 11, h: 0.8, fontSize: 36, align: "center", color: C.white });
+s.addShape("rect", { x: 4, y: 5.3, w: 5.33, h: 0.05, fill: { color: C.accent } });
+s.addText("动手实践 · 深度学习 · 即学即用", { x: 1, y: 5.5, w: 11, h: 0.6, fontSize: 16, color: C.secondary, align: "center", italic: true });
 
-// ========== SLIDE 1: Title ==========
-{
-  const slide = pptx.addSlide();
-  slide.background = { fill: C.mid };
-  // Decorative shapes
-  slide.addShape(pptx.shapes.OVAL, { x: 7.5, y: -1, w: 4, h: 4, fill: { type: "solid", color: C.deep }, transparency: 60 });
-  slide.addShape(pptx.shapes.OVAL, { x: 8.5, y: 3, w: 3, h: 3, fill: { type: "solid", color: C.teal }, transparency: 70 });
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 0.8, y: 3.8, w: 3, h: 0.08, fill: { type: "solid", color: C.teal } });
+// Slide 2 - Agenda
+s = addSlide(bgLight, "本页介绍工作坊的完整议程，共四个环节，请大家合理安排时间。");
+s.addText("📋 工作坊议程", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 32, bold: true, color: C.primary });
+const agenda = [
+  ["Session 1", "30分钟", "🧠 AI Agent vs LLM - 概念与架构对比"],
+  ["Session 2", "40分钟", "💼 Agent 日常工作场景 - 代码审查、研究、自动化"],
+  ["Session 3", "30分钟", "🔧 OpenClaw 安装与动手实验"],
+  ["Session 4", "20分钟", "☁️ OpenClaw on Azure 最佳实践"],
+];
+const rows = [
+  [{ text: "环节", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+   { text: "时长", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+   { text: "内容", options: { bold: true, color: C.white, fill: { color: C.primary } } }],
+  ...agenda.map((r, i) => r.map(c => ({ text: c, options: { fill: { color: i % 2 === 0 ? "E8F0F8" : C.white } } })))
+];
+s.addTable(rows, { x: 0.8, y: 1.4, w: 11.5, colW: [1.8, 1.5, 8.2], fontSize: 16, border: { type: "solid", pt: 0.5, color: "CCCCCC" }, rowH: 0.7 });
 
-  slide.addText("AI Agent Workshop", { x: 0.8, y: 1.5, w: 8, h: 1.4, fontSize: 44, fontFace: "Georgia", color: C.white, bold: true });
-  slide.addText("从 LLM 到 Agent：理解、应用与实践", { x: 0.8, y: 2.9, w: 8, h: 0.8, fontSize: 22, fontFace: "Calibri", color: C.teal });
-  slide.addText("2小时沉浸式工作坊  |  动手实验", { x: 0.8, y: 4.1, w: 6, h: 0.6, fontSize: 16, fontFace: "Calibri", color: "A0AEC0" });
-}
+// Slide 3 - What is LLM
+s = addSlide(bgDark, "介绍大语言模型的基本概念，帮助学员理解LLM的能力边界。");
+s.addText("🧠 Session 1: 什么是大语言模型 (LLM)?", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+s.addText([
+  { text: "核心特点\n", options: { fontSize: 20, bold: true, color: C.accent } },
+  { text: "• 基于 Transformer 架构的深度学习模型\n• 通过海量文本数据训练\n• 擅长文本生成、理解、翻译、摘要\n• 单次请求-响应模式\n\n", options: { fontSize: 16, ...lightText } },
+  { text: "📊 关键数据\n", options: { fontSize: 20, bold: true, color: C.accent } },
+  { text: "GPT-4: 1.8万亿参数 | 训练数据: 13万亿 tokens", options: { fontSize: 18, bold: true, ...lightText } },
+], { x: 0.8, y: 1.3, w: 11, h: 5, valign: "top" });
 
-// ========== SLIDE 2: Agenda ==========
-{
-  const slide = addContent("📋  议程 Agenda");
-  const sessions = [
-    { time: "0:00 - 0:40", title: "Session 1: AI Agent vs LLM 探讨分析", desc: "概念对比、架构分析、适用场景", color: C.deep },
-    { time: "0:40 - 1:20", title: "Session 2: Agent 日常工作使用场景展示", desc: "代码审查、研究分析、自动化、多Agent协作", color: C.teal },
-    { time: "1:20 - 2:00", title: "Session 3: 安装 OpenClaw 动手实验", desc: "GitHub Copilot + WeChat 集成实践", color: C.mid },
-  ];
-  sessions.forEach((s, i) => {
-    const y = 1.5 + i * 1.4;
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 0.5, y, w: 9, h: 1.15, rectRadius: 0.1, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 0.5, y, w: 0.12, h: 1.15, rectRadius: 0.06, fill: { type: "solid", color: s.color } });
-    slide.addText(s.time, { x: 0.8, y, w: 2, h: 0.6, fontSize: 13, fontFace: "Calibri", color: s.color, bold: true });
-    slide.addText(s.title, { x: 0.8, y: y + 0.05, w: 8, h: 0.65, fontSize: 17, fontFace: "Georgia", color: C.darkText, bold: true, valign: "bottom" });
-    slide.addText(s.desc, { x: 0.8, y: y + 0.65, w: 8, h: 0.45, fontSize: 13, fontFace: "Calibri", color: C.subText });
-  });
-}
+// Slide 4 - What is AI Agent
+s = addSlide(bgLight, "介绍AI Agent的概念，强调与LLM的本质区别：自主性、工具使用、记忆。");
+s.addText("🤖 什么是 AI Agent?", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+s.addText([
+  { text: "AI Agent = LLM + 工具 + 记忆 + 规划\n\n", options: { fontSize: 22, bold: true, color: C.secondary } },
+  { text: "🔧 工具调用", options: { fontSize: 18, bold: true, color: C.primary } },
+  { text: " — 执行代码、调用API、操作文件\n", options: { fontSize: 16, color: C.dark } },
+  { text: "🧠 记忆系统", options: { fontSize: 18, bold: true, color: C.primary } },
+  { text: " — 短期/长期记忆，上下文管理\n", options: { fontSize: 16, color: C.dark } },
+  { text: "📋 任务规划", options: { fontSize: 18, bold: true, color: C.primary } },
+  { text: " — 分解复杂任务，自主决策\n", options: { fontSize: 16, color: C.dark } },
+  { text: "🔄 自主循环", options: { fontSize: 18, bold: true, color: C.primary } },
+  { text: " — 观察→思考→行动→反馈", options: { fontSize: 16, color: C.dark } },
+], { x: 0.8, y: 1.3, w: 11, h: 5, valign: "top" });
 
-// ========== SLIDE 3: What is LLM ==========
-{
-  const slide = addContent("什么是 LLM（大语言模型）？");
-  slide.addText([
-    { text: "LLM 的核心特点", options: { fontSize: 18, bold: true, color: C.deep, fontFace: "Georgia" } },
-    { text: "", options: { breakLine: true, fontSize: 8 } },
-    { text: "基于 Transformer 架构的大规模语言模型", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "通过海量文本数据预训练，掌握语言规律", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "输入 Prompt → 输出文本（单轮交互）", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "无记忆、无工具调用、无自主规划能力", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "代表：GPT-4、Claude、Gemini、DeepSeek", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-  ], { x: 0.5, y: 1.4, w: 5.5, h: 4, valign: "top" });
+// Slide 5 - Comparison Table
+s = addSlide(bgDark, "通过对比表格，让学员清晰理解LLM和AI Agent的核心差异。");
+s.addText("⚖️ LLM vs AI Agent 对比", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+const cmpHeader = [
+  { text: "维度", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+  { text: "LLM", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+  { text: "AI Agent", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+];
+const cmpData = [
+  ["交互模式", "单轮问答", "多轮自主循环"],
+  ["工具使用", "❌ 无", "✅ 丰富工具链"],
+  ["记忆能力", "仅上下文窗口", "短期+长期记忆"],
+  ["任务规划", "❌ 无", "✅ 自动分解任务"],
+  ["执行能力", "仅文本输出", "代码执行、文件操作"],
+  ["适用场景", "问答、翻译", "复杂工作流自动化"],
+];
+const cmpRows = [cmpHeader, ...cmpData.map((r, i) => r.map(c => ({ text: c, options: { fill: { color: i % 2 === 0 ? "1A2A3A" : "0F1F2F" }, color: C.white } })))];
+s.addTable(cmpRows, { x: 0.8, y: 1.3, w: 11.5, colW: [2.5, 4, 5], fontSize: 15, border: { type: "solid", pt: 0.5, color: "334455" }, rowH: 0.6 });
 
-  // Right side box
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.3, y: 1.6, w: 3.5, h: 3.2, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  slide.addText("LLM 工作模式", { x: 6.3, y: 1.7, w: 3.5, h: 0.6, fontSize: 15, fontFace: "Georgia", color: C.deep, bold: true, align: "center" });
-  slide.addText("Prompt → Model → Response", { x: 6.3, y: 2.4, w: 3.5, h: 0.5, fontSize: 13, fontFace: "Calibri", color: C.teal, align: "center", bold: true });
-  slide.addText("⬇", { x: 6.3, y: 2.8, w: 3.5, h: 0.4, fontSize: 20, align: "center", color: C.teal });
-  slide.addText("「无状态的文本生成器」", { x: 6.3, y: 3.2, w: 3.5, h: 0.5, fontSize: 14, fontFace: "Calibri", color: C.mid, align: "center" });
-  slide.addText("每次对话都是全新开始\n不能主动获取外部信息\n不能执行实际操作", { x: 6.5, y: 3.7, w: 3.1, h: 1, fontSize: 11, fontFace: "Calibri", color: C.subText, align: "center" });
-}
+// Slide 6 - Agent Architecture
+s = addSlide(bgLight, "展示AI Agent的典型架构图，帮助学员理解各组件之间的关系。");
+s.addText("🏗️ AI Agent 架构", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+const boxes = [
+  { label: "🧠 LLM 核心", x: 4.5, y: 1.5, color: C.primary },
+  { label: "🔧 工具层", x: 1, y: 3.2, color: C.secondary },
+  { label: "💾 记忆层", x: 4.5, y: 3.2, color: C.secondary },
+  { label: "📋 规划层", x: 8, y: 3.2, color: C.secondary },
+  { label: "🌐 外部环境", x: 4.5, y: 5, color: C.accent },
+];
+boxes.forEach(b => {
+  s.addShape("roundRect", { x: b.x, y: b.y, w: 3.5, h: 1, fill: { color: b.color }, rectRadius: 0.15 });
+  s.addText(b.label, { x: b.x, y: b.y, w: 3.5, h: 1, fontSize: 16, bold: true, color: C.white, align: "center", valign: "middle" });
+});
 
-// ========== SLIDE 4: What is AI Agent ==========
-{
-  const slide = addContent("什么是 AI Agent（智能体）？");
-  slide.addText([
-    { text: "AI Agent 的核心特点", options: { fontSize: 18, bold: true, color: C.deep, fontFace: "Georgia" } },
-    { text: "", options: { breakLine: true, fontSize: 8 } },
-    { text: "以 LLM 为「大脑」，具备自主决策能力", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "能调用外部工具（API、数据库、代码执行）", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "拥有记忆系统（短期 + 长期记忆）", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "能自主规划和分解复杂任务", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "支持多步推理和反思循环", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "代表：AutoGPT、Devin、OpenClaw", options: { bullet: true, fontSize: 14, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-  ], { x: 0.5, y: 1.4, w: 5.5, h: 4, valign: "top" });
+// Slide 7 - Discussion
+s = addSlide(bgDark, "引导学员讨论，鼓励分享自己对AI Agent的理解和期望。");
+s.addText("💬 讨论环节", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+s.addText([
+  { text: "思考题:\n\n", options: { fontSize: 22, bold: true, color: C.accent } },
+  { text: "1️⃣  你日常工作中哪些任务可以交给 AI Agent？\n\n", options: { fontSize: 18, ...lightText } },
+  { text: "2️⃣  AI Agent 的自主性带来哪些风险？如何管控？\n\n", options: { fontSize: 18, ...lightText } },
+  { text: "3️⃣  Agent 和传统自动化脚本有什么本质区别？\n\n", options: { fontSize: 18, ...lightText } },
+  { text: "⏱️ 5分钟小组讨论", options: { fontSize: 20, bold: true, color: C.accent } },
+], { x: 0.8, y: 1.3, w: 11, h: 5, valign: "top" });
 
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.3, y: 1.6, w: 3.5, h: 3.2, rectRadius: 0.15, fill: { type: "solid", color: C.deep }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  slide.addText("Agent 工作模式", { x: 6.3, y: 1.7, w: 3.5, h: 0.6, fontSize: 15, fontFace: "Georgia", color: C.white, bold: true, align: "center" });
-  slide.addText("感知 → 思考 → 行动 → 观察", { x: 6.3, y: 2.3, w: 3.5, h: 0.5, fontSize: 13, fontFace: "Calibri", color: C.accent, align: "center", bold: true });
-  slide.addText("🔄", { x: 6.3, y: 2.7, w: 3.5, h: 0.5, fontSize: 24, align: "center" });
-  slide.addText("「自主循环的智能助手」", { x: 6.3, y: 3.2, w: 3.5, h: 0.5, fontSize: 14, fontFace: "Calibri", color: C.teal, align: "center" });
-  slide.addText("持续记忆上下文\n主动调用工具获取信息\n自主规划和执行任务", { x: 6.5, y: 3.7, w: 3.1, h: 1, fontSize: 11, fontFace: "Calibri", color: "A0AEC0", align: "center" });
-}
+// Slide 8 - Session 2 Title
+s = addSlide(bgLight, "进入第二环节，展示AI Agent在日常工作中的实际应用场景。");
+s.addText("💼 Session 2", { x: 1, y: 1.5, w: 11, h: 1, fontSize: 24, color: C.secondary, align: "center" });
+s.addText("Agent 日常工作场景", { x: 1, y: 2.5, w: 11, h: 1.2, fontSize: 40, bold: true, color: C.primary, align: "center" });
+s.addText("代码审查 · 研究分析 · 自动化运维", { x: 1, y: 3.8, w: 11, h: 0.8, fontSize: 20, color: C.secondary, align: "center" });
+s.addText("⏱️ 40 分钟", { x: 1, y: 5, w: 11, h: 0.6, fontSize: 18, color: C.accent, align: "center", bold: true });
 
-// ========== SLIDE 5: Architecture Comparison ==========
-{
-  const slide = addContent("架构对比：Agent vs LLM");
-  // LLM side
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 0.4, y: 1.5, w: 4.5, h: 3.8, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  slide.addText("LLM 架构", { x: 0.4, y: 1.5, w: 4.5, h: 0.7, fontSize: 18, fontFace: "Georgia", color: C.deep, bold: true, align: "center" });
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 1.2, y: 2.4, w: 2.8, h: 0.6, rectRadius: 0.1, fill: { type: "solid", color: C.gray } });
-  slide.addText("用户输入 Prompt", { x: 1.2, y: 2.4, w: 2.8, h: 0.6, fontSize: 12, fontFace: "Calibri", color: C.darkText, align: "center" });
-  slide.addText("⬇", { x: 1.2, y: 3.0, w: 2.8, h: 0.35, fontSize: 16, align: "center", color: C.deep });
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 1.2, y: 3.35, w: 2.8, h: 0.6, rectRadius: 0.1, fill: { type: "solid", color: C.deep } });
-  slide.addText("LLM 模型推理", { x: 1.2, y: 3.35, w: 2.8, h: 0.6, fontSize: 12, fontFace: "Calibri", color: C.white, align: "center" });
-  slide.addText("⬇", { x: 1.2, y: 3.95, w: 2.8, h: 0.35, fontSize: 16, align: "center", color: C.deep });
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 1.2, y: 4.3, w: 2.8, h: 0.6, rectRadius: 0.1, fill: { type: "solid", color: C.gray } });
-  slide.addText("文本输出", { x: 1.2, y: 4.3, w: 2.8, h: 0.6, fontSize: 12, fontFace: "Calibri", color: C.darkText, align: "center" });
+// Slide 9 - Code Review
+s = addSlide(bgDark, "展示Agent如何自动进行代码审查，包括安全漏洞检测、代码风格检查等。");
+s.addText("🔍 场景一: 智能代码审查", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+// Two columns
+s.addText([
+  { text: "Agent 能做什么?\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "✅ 自动检测安全漏洞\n✅ 代码风格一致性检查\n✅ 性能瓶颈识别\n✅ 生成修复建议 PR\n✅ 上下文理解整个代码库", options: { fontSize: 15, ...lightText } },
+], { x: 0.5, y: 1.3, w: 5.5, h: 4.5, valign: "top" });
+s.addText([
+  { text: "📊 效率提升\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "代码审查时间减少 ", options: { fontSize: 16, ...lightText } },
+  { text: "60%\n\n", options: { fontSize: 28, bold: true, color: C.accent } },
+  { text: "Bug 检出率提升 ", options: { fontSize: 16, ...lightText } },
+  { text: "40%\n\n", options: { fontSize: 28, bold: true, color: C.accent } },
+  { text: "开发者满意度 ", options: { fontSize: 16, ...lightText } },
+  { text: "92%", options: { fontSize: 28, bold: true, color: C.accent } },
+], { x: 6.8, y: 1.3, w: 5.5, h: 4.5, valign: "top" });
 
-  // Agent side
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 5.2, y: 1.5, w: 4.5, h: 3.8, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  slide.addText("Agent 架构", { x: 5.2, y: 1.5, w: 4.5, h: 0.7, fontSize: 18, fontFace: "Georgia", color: C.teal, bold: true, align: "center" });
-  
-  const agentBoxes = [
-    { label: "感知层 Perception", y: 2.3, color: C.teal },
-    { label: "规划层 Planning", y: 3.0, color: C.deep },
-    { label: "执行层 Action + Tools", y: 3.7, color: C.mid },
-    { label: "记忆层 Memory", y: 4.4, color: C.teal },
-  ];
-  agentBoxes.forEach(b => {
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 5.8, y: b.y, w: 3.3, h: 0.55, rectRadius: 0.1, fill: { type: "solid", color: b.color } });
-    slide.addText(b.label, { x: 5.8, y: b.y, w: 3.3, h: 0.55, fontSize: 12, fontFace: "Calibri", color: C.white, align: "center" });
-  });
-}
+// Slide 10 - Research
+s = addSlide(bgLight, "展示Agent在技术调研和信息收集方面的应用。");
+s.addText("🔬 场景二: 智能研究分析", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+s.addText([
+  { text: "• 自动搜索并汇总技术文档\n", options: { fontSize: 16, color: C.dark } },
+  { text: "• 对比多种技术方案的优劣\n", options: { fontSize: 16, color: C.dark } },
+  { text: "• 生成结构化调研报告\n", options: { fontSize: 16, color: C.dark } },
+  { text: "• 持续跟踪技术趋势变化\n", options: { fontSize: 16, color: C.dark } },
+  { text: "• 多源信息交叉验证\n\n", options: { fontSize: 16, color: C.dark } },
+  { text: "💡 示例: 调研 \"Rust vs Go 在微服务中的选择\"\n", options: { fontSize: 16, bold: true, color: C.secondary } },
+  { text: "Agent 自动阅读 50+ 篇文章，生成 10 页对比报告", options: { fontSize: 15, italic: true, color: C.secondary } },
+], { x: 0.8, y: 1.5, w: 11, h: 4.5, valign: "top" });
 
-// ========== SLIDE 6: Agent = LLM + Tools + Memory + Planning ==========
-{
-  const slide = addContent("Agent = LLM + Tools + Memory + Planning");
-  const components = [
-    { icon: "🧠", title: "LLM 大脑", desc: "核心推理引擎\n理解意图、生成回复", x: 0.4, color: C.deep },
-    { icon: "🔧", title: "Tools 工具", desc: "API调用、代码执行\n文件操作、网络搜索", x: 2.8, color: C.teal },
-    { icon: "💾", title: "Memory 记忆", desc: "短期对话记忆\n长期知识存储", x: 5.2, color: C.mid },
-    { icon: "📋", title: "Planning 规划", desc: "任务分解、步骤规划\n反思与自我修正", x: 7.6, color: C.deep },
-  ];
-  components.forEach(c => {
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: c.x, y: 1.6, w: 2.2, h: 3.2, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-    slide.addText(c.icon, { x: c.x, y: 1.7, w: 2.2, h: 0.8, fontSize: 36, align: "center" });
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: c.x + 0.3, y: 2.6, w: 1.6, h: 0.06, rectRadius: 0.03, fill: { type: "solid", color: c.color } });
-    slide.addText(c.title, { x: c.x, y: 2.75, w: 2.2, h: 0.55, fontSize: 15, fontFace: "Georgia", color: c.color, bold: true, align: "center" });
-    slide.addText(c.desc, { x: c.x + 0.15, y: 3.3, w: 1.9, h: 1.3, fontSize: 11, fontFace: "Calibri", color: C.subText, align: "center" });
-  });
-}
+// Slide 11 - Automation
+s = addSlide(bgDark, "展示Agent在运维自动化方面的实际应用案例。");
+s.addText("⚡ 场景三: 自动化运维", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+s.addText([
+  { text: "🔄 CI/CD 流水线优化\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "   自动分析构建失败原因并修复\n\n", options: { fontSize: 15, ...lightText } },
+  { text: "📊 监控告警处理\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "   自动诊断告警、执行修复操作\n\n", options: { fontSize: 15, ...lightText } },
+  { text: "📝 文档自动生成\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "   根据代码变更自动更新文档\n\n", options: { fontSize: 15, ...lightText } },
+  { text: "🔐 安全合规检查\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "   持续扫描依赖漏洞并自动升级", options: { fontSize: 15, ...lightText } },
+], { x: 0.8, y: 1.3, w: 11, h: 5, valign: "top" });
 
-// ========== SLIDE 7: When to use Agent vs LLM ==========
-{
-  const slide = addContent("何时使用 Agent vs LLM？");
-  // Table
-  const rows = [
-    ["维度", "LLM", "Agent"],
-    ["任务复杂度", "简单单轮问答", "复杂多步骤任务"],
-    ["是否需要工具", "否", "是（API/代码/搜索）"],
-    ["是否需要记忆", "否（无状态）", "是（上下文记忆）"],
-    ["自主性", "被动响应", "主动规划执行"],
-    ["延迟容忍", "需要快速响应", "可接受较长处理时间"],
-    ["典型场景", "翻译、摘要、问答", "开发、研究、自动化"],
-  ];
-  slide.addTable(rows, {
-    x: 0.5, y: 1.5, w: 9, h: 3.5,
-    fontSize: 12, fontFace: "Calibri",
-    border: { pt: 0.5, color: "CBD5E0" },
-    colW: [1.5, 3.75, 3.75],
-    rowH: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-    autoPage: false,
-    color: C.darkText,
-    headerRow: true,
-  });
-}
+// Slide 12 - Demo
+s = addSlide(bgLight, "现场演示环节，展示Agent完成实际任务的全过程。");
+s.addText("🎬 现场演示", { x: 1, y: 1.5, w: 11, h: 1, fontSize: 36, bold: true, color: C.primary, align: "center" });
+s.addText("观看 AI Agent 实时完成以下任务:", { x: 1, y: 2.8, w: 11, h: 0.6, fontSize: 20, color: C.secondary, align: "center" });
+s.addText([
+  { text: "1. 分析一个 GitHub 仓库的代码质量\n", options: { fontSize: 18, color: C.dark } },
+  { text: "2. 自动创建 Issue 并提交修复 PR\n", options: { fontSize: 18, color: C.dark } },
+  { text: "3. 生成代码变更的中文文档\n", options: { fontSize: 18, color: C.dark } },
+], { x: 2.5, y: 3.8, w: 8, h: 2.5, valign: "top" });
 
-// ========== SLIDE 8: Session 2 Divider ==========
-addDivider("Agent 日常工作使用场景", "Session 2  |  40 分钟  |  四大核心场景演示", "🎯");
+// Slide 13 - Session 3 Title
+s = addSlide(bgDark, "进入第三环节，开始OpenClaw的安装和动手实验。");
+s.addText("🔧 Session 3", { x: 1, y: 1.5, w: 11, h: 1, fontSize: 24, color: C.accent, align: "center" });
+s.addText("OpenClaw 安装与动手实验", { x: 1, y: 2.5, w: 11, h: 1.2, fontSize: 40, bold: true, ...lightText, align: "center" });
+s.addText("从零开始，亲手搭建你的 AI Agent", { x: 1, y: 3.8, w: 11, h: 0.8, fontSize: 20, color: C.accent, align: "center" });
+s.addText("⏱️ 30 分钟", { x: 1, y: 5, w: 11, h: 0.6, fontSize: 18, color: C.accent, align: "center", bold: true });
 
-// ========== SLIDE 9: Code Review ==========
-{
-  const slide = addContent("场景一：代码审查与开发 Code Review");
-  slide.addText([
-    { text: "Agent 如何助力代码开发？", options: { fontSize: 16, bold: true, color: C.deep, fontFace: "Georgia" } },
-    { text: "", options: { breakLine: true, fontSize: 6 } },
-    { text: "自动审查 Pull Request，识别潜在问题", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "根据代码上下文生成改进建议", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "自动编写单元测试和集成测试", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "理解项目全局架构，保持一致性", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "跨文件重构与依赖分析", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-  ], { x: 0.5, y: 1.4, w: 5.5, h: 3.5, valign: "top" });
+// Slide 14 - Prerequisites
+s = addSlide(bgLight, "列出动手实验的环境要求，确保所有学员准备就绪。");
+s.addText("📋 环境准备", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+const preRows = [
+  [{ text: "工具", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+   { text: "版本要求", options: { bold: true, color: C.white, fill: { color: C.primary } } },
+   { text: "说明", options: { bold: true, color: C.white, fill: { color: C.primary } } }],
+  ["Node.js", "≥ 18.x", "运行时环境"],
+  ["Git", "最新版", "代码管理"],
+  ["VS Code", "最新版", "推荐编辑器"],
+  ["Azure CLI", "≥ 2.50", "云资源管理"],
+  ["Docker", "≥ 24.x", "容器化部署"],
+].map((r, i) => i === 0 ? r : r.map(c => ({ text: c, options: { fill: { color: i % 2 === 0 ? "E8F0F8" : C.white } } })));
+s.addTable(preRows, { x: 0.8, y: 1.4, w: 11.5, colW: [3, 3, 5.5], fontSize: 15, border: { type: "solid", pt: 0.5, color: "CCCCCC" }, rowH: 0.6 });
 
-  // Tools box
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.3, y: 1.5, w: 3.5, h: 3.5, rectRadius: 0.15, fill: { type: "solid", color: C.deep } });
-  slide.addText("常用工具", { x: 6.3, y: 1.6, w: 3.5, h: 0.5, fontSize: 15, fontFace: "Georgia", color: C.white, bold: true, align: "center" });
-  const tools = ["GitHub Copilot", "Cursor Agent", "Coderabbit", "SonarQube + AI", "OpenClaw"];
-  tools.forEach((t, i) => {
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.6, y: 2.2 + i * 0.52, w: 2.9, h: 0.42, rectRadius: 0.08, fill: { type: "solid", color: C.teal } });
-    slide.addText(t, { x: 6.6, y: 2.2 + i * 0.52, w: 2.9, h: 0.42, fontSize: 12, fontFace: "Calibri", color: C.white, align: "center" });
-  });
-}
+// Slide 15 - Installation Steps
+s = addSlide(bgDark, "逐步指导学员安装OpenClaw，讲师同步演示。");
+s.addText("🚀 OpenClaw 安装步骤", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+s.addText([
+  { text: "Step 1: 克隆仓库\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "  git clone https://github.com/openclaw/openclaw.git\n\n", options: { fontSize: 14, color: "AABBCC", fontFace: "Courier New" } },
+  { text: "Step 2: 安装依赖\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "  cd openclaw && npm install\n\n", options: { fontSize: 14, color: "AABBCC", fontFace: "Courier New" } },
+  { text: "Step 3: 配置环境变量\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "  cp .env.example .env && vim .env\n\n", options: { fontSize: 14, color: "AABBCC", fontFace: "Courier New" } },
+  { text: "Step 4: 启动服务\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "  npm run start\n\n", options: { fontSize: 14, color: "AABBCC", fontFace: "Courier New" } },
+  { text: "Step 5: 验证\n", options: { fontSize: 17, bold: true, color: C.accent } },
+  { text: "  curl http://localhost:3000/health", options: { fontSize: 14, color: "AABBCC", fontFace: "Courier New" } },
+], { x: 0.8, y: 1.3, w: 11, h: 5.5, valign: "top" });
 
-// ========== SLIDE 10: Research & Analysis ==========
-{
-  const slide = addContent("场景二：研究与分析 Research & Analysis");
-  slide.addText([
-    { text: "Agent 驱动的智能研究流程", options: { fontSize: 16, bold: true, color: C.deep, fontFace: "Georgia" } },
-    { text: "", options: { breakLine: true, fontSize: 6 } },
-    { text: "自动搜索并汇总多源信息", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "分析技术文档、论文、竞品报告", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "生成结构化研究报告和对比矩阵", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "持续跟踪特定领域的最新动态", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "数据可视化与趋势预测", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-  ], { x: 0.5, y: 1.4, w: 5.5, h: 3.5, valign: "top" });
+// Slide 16 - Hands-on Lab
+s = addSlide(bgLight, "学员动手实验时间，讲师巡场指导。");
+s.addText("🧪 动手实验", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+s.addText([
+  { text: "实验任务:\n\n", options: { fontSize: 20, bold: true, color: C.secondary } },
+  { text: "1️⃣  配置 OpenClaw 连接 Azure OpenAI\n\n", options: { fontSize: 17, color: C.dark } },
+  { text: "2️⃣  创建你的第一个 Agent 工作流\n\n", options: { fontSize: 17, color: C.dark } },
+  { text: "3️⃣  让 Agent 自动分析一段代码\n\n", options: { fontSize: 17, color: C.dark } },
+  { text: "4️⃣  查看 Agent 的执行日志和推理过程\n\n", options: { fontSize: 17, color: C.dark } },
+  { text: "⏱️ 20分钟动手时间 | 遇到问题请举手 🙋", options: { fontSize: 16, bold: true, color: C.accent } },
+], { x: 0.8, y: 1.3, w: 11, h: 5, valign: "top" });
 
-  // Flow diagram
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.3, y: 1.5, w: 3.5, h: 3.5, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  slide.addText("研究流程", { x: 6.3, y: 1.6, w: 3.5, h: 0.5, fontSize: 15, fontFace: "Georgia", color: C.deep, bold: true, align: "center" });
-  const steps = ["🔍 信息收集", "📊 数据分析", "📝 报告生成", "✅ 审核优化"];
-  steps.forEach((s, i) => {
-    slide.addText(s, { x: 6.6, y: 2.2 + i * 0.65, w: 2.9, h: 0.5, fontSize: 13, fontFace: "Calibri", color: C.deep, align: "center" });
-    if (i < steps.length - 1) {
-      slide.addText("⬇", { x: 6.6, y: 2.55 + i * 0.65, w: 2.9, h: 0.3, fontSize: 12, align: "center", color: C.teal });
-    }
-  });
-}
+// Slide 17 - Session 4 Title
+s = addSlide(bgDark, "进入最后环节，介绍OpenClaw在Azure上的最佳实践。");
+s.addText("☁️ Session 4", { x: 1, y: 1.5, w: 11, h: 1, fontSize: 24, color: C.accent, align: "center" });
+s.addText("OpenClaw on Azure 最佳实践", { x: 1, y: 2.5, w: 11, h: 1.2, fontSize: 40, bold: true, ...lightText, align: "center" });
+s.addText("企业级部署 · 安全合规 · 高可用架构", { x: 1, y: 3.8, w: 11, h: 0.8, fontSize: 20, color: C.accent, align: "center" });
+s.addText("⏱️ 20 分钟", { x: 1, y: 5, w: 11, h: 0.6, fontSize: 18, color: C.accent, align: "center", bold: true });
 
-// ========== SLIDE 11: Daily Automation ==========
-{
-  const slide = addContent("场景三：日常自动化 Daily Automation");
-  const items = [
-    { icon: "📧", title: "邮件处理", desc: "自动分类、摘要、草拟回复" },
-    { icon: "📅", title: "日程管理", desc: "智能安排会议、提醒事项" },
-    { icon: "📄", title: "文档生成", desc: "自动生成报告、PPT、周报" },
-    { icon: "🔄", title: "工作流自动化", desc: "CI/CD、部署、监控告警" },
-    { icon: "💬", title: "客户支持", desc: "智能客服、工单分类处理" },
-    { icon: "📊", title: "数据处理", desc: "ETL、数据清洗、报表生成" },
-  ];
-  items.forEach((item, i) => {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const x = 0.4 + col * 3.15;
-    const y = 1.5 + row * 1.8;
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x, y, w: 2.95, h: 1.5, rectRadius: 0.12, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 3, offset: 1, color: "CCCCCC" } });
-    slide.addText(item.icon, { x, y: y + 0.1, w: 2.95, h: 0.5, fontSize: 24, align: "center" });
-    slide.addText(item.title, { x, y: y + 0.55, w: 2.95, h: 0.4, fontSize: 14, fontFace: "Georgia", color: C.deep, bold: true, align: "center" });
-    slide.addText(item.desc, { x, y: y + 0.95, w: 2.95, h: 0.4, fontSize: 11, fontFace: "Calibri", color: C.subText, align: "center" });
-  });
-}
+// Slide 18 - Azure Architecture
+s = addSlide(bgLight, "展示OpenClaw在Azure上的推荐架构，讲解各服务的角色和选型理由。");
+s.addText("🏗️ Azure 架构设计", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, color: C.primary });
+const azureServices = [
+  { icon: "🖥️", name: "Azure VM", desc: "开发测试环境" },
+  { icon: "📦", name: "Azure Container Apps", desc: "生产级容器部署" },
+  { icon: "🤖", name: "Azure OpenAI", desc: "GPT-4 / GPT-4o 模型服务" },
+  { icon: "💾", name: "Cosmos DB", desc: "Agent 记忆与状态存储" },
+  { icon: "🔐", name: "Key Vault", desc: "密钥与证书管理" },
+  { icon: "🌐", name: "Front Door", desc: "全球负载均衡与CDN" },
+];
+azureServices.forEach((svc, i) => {
+  const col = i % 2;
+  const row = Math.floor(i / 2);
+  const x = col === 0 ? 0.8 : 6.8;
+  const y = 1.4 + row * 1.6;
+  s.addShape("roundRect", { x, y, w: 5.5, h: 1.3, fill: { color: C.white }, shadow: { type: "outer", blur: 6, offset: 2, color: "CCCCCC" }, rectRadius: 0.1 });
+  s.addText(`${svc.icon} ${svc.name}`, { x: x + 0.2, y, w: 5, h: 0.7, fontSize: 17, bold: true, color: C.primary, valign: "bottom" });
+  s.addText(svc.desc, { x: x + 0.2, y: y + 0.6, w: 5, h: 0.5, fontSize: 14, color: C.secondary });
+});
 
-// ========== SLIDE 12: Multi-Agent Collaboration ==========
-{
-  const slide = addContent("多 Agent 协作 Multi-Agent Collaboration");
-  slide.addText("多个专业 Agent 协同完成复杂任务", { x: 0.5, y: 1.35, w: 9, h: 0.5, fontSize: 14, fontFace: "Calibri", color: C.subText });
+// Slide 19 - Best Practices
+s = addSlide(bgDark, "总结Azure部署的关键最佳实践，帮助学员在实际项目中少走弯路。");
+s.addText("✅ 部署最佳实践", { x: 0.8, y: 0.3, w: 11, h: 0.8, fontSize: 28, bold: true, ...lightText });
+// Two columns
+s.addText([
+  { text: "🔒 安全性\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "• 使用 Managed Identity\n• Key Vault 管理所有密钥\n• 网络隔离 (VNet)\n• RBAC 最小权限原则\n", options: { fontSize: 15, ...lightText } },
+], { x: 0.5, y: 1.2, w: 5.8, h: 2.5, valign: "top" });
+s.addText([
+  { text: "📈 可扩展性\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "• Container Apps 自动伸缩\n• Cosmos DB 按需吞吐量\n• Front Door 全球分发\n• 多区域容灾部署\n", options: { fontSize: 15, ...lightText } },
+], { x: 6.8, y: 1.2, w: 5.8, h: 2.5, valign: "top" });
+s.addText([
+  { text: "💰 成本优化\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "• Azure OpenAI PTU 预留容量\n• 容器按使用量计费\n• 开发环境定时关机\n• Azure Advisor 成本建议", options: { fontSize: 15, ...lightText } },
+], { x: 0.5, y: 4, w: 5.8, h: 2.5, valign: "top" });
+s.addText([
+  { text: "🔍 可观测性\n\n", options: { fontSize: 18, bold: true, color: C.accent } },
+  { text: "• Application Insights 监控\n• Log Analytics 日志分析\n• Agent 执行链路追踪\n• 自定义仪表盘告警", options: { fontSize: 15, ...lightText } },
+], { x: 6.8, y: 4, w: 5.8, h: 2.5, valign: "top" });
 
-  const agents = [
-    { name: "PM Agent\n需求分析", x: 1.0, y: 2.2, color: C.deep },
-    { name: "Dev Agent\n代码开发", x: 3.5, y: 2.2, color: C.teal },
-    { name: "QA Agent\n测试验证", x: 6.0, y: 2.2, color: C.mid },
-    { name: "Ops Agent\n部署运维", x: 8.5, y: 2.2, color: C.deep },
-  ];
-  agents.forEach(a => {
-    slide.addShape(pptx.shapes.OVAL, { x: a.x, y: a.y, w: 1.6, h: 1.6, fill: { type: "solid", color: a.color }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-    slide.addText(a.name, { x: a.x, y: a.y + 0.3, w: 1.6, h: 1, fontSize: 12, fontFace: "Calibri", color: C.white, align: "center", bold: true });
-  });
-  // Arrows between agents
-  [2.7, 5.2, 7.7].forEach(x => {
-    slide.addText("→", { x, y: 2.7, w: 0.8, h: 0.6, fontSize: 28, color: C.teal, align: "center" });
-  });
+// Slide 20 - Q&A
+s = addSlide(bgLight, "问答环节和资源分享，鼓励学员提问和后续学习。");
+s.addText("❓ Q&A / 资源", { x: 1, y: 0.5, w: 11, h: 1, fontSize: 36, bold: true, color: C.primary, align: "center" });
+s.addText("感谢参与！欢迎提问 🙋", { x: 1, y: 1.6, w: 11, h: 0.8, fontSize: 22, color: C.secondary, align: "center" });
+s.addText([
+  { text: "📚 学习资源\n\n", options: { fontSize: 20, bold: true, color: C.primary } },
+  { text: "🔗 OpenClaw 文档: https://openclaw.dev/docs\n", options: { fontSize: 16, color: C.dark } },
+  { text: "🔗 Azure OpenAI: https://aka.ms/azure-openai\n", options: { fontSize: 16, color: C.dark } },
+  { text: "🔗 示例代码: https://github.com/openclaw/examples\n", options: { fontSize: 16, color: C.dark } },
+  { text: "🔗 社区论坛: https://community.openclaw.dev\n\n", options: { fontSize: 16, color: C.dark } },
+  { text: "📧 联系讲师 | 💬 加入微信交流群\n\n", options: { fontSize: 18, bold: true, color: C.secondary } },
+  { text: "⭐ 请扫码填写反馈问卷 ⭐", options: { fontSize: 20, bold: true, color: C.accent } },
+], { x: 1.5, y: 2.8, w: 10, h: 4, valign: "top" });
 
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 1.5, y: 4.2, w: 7, h: 0.8, rectRadius: 0.1, fill: { type: "solid", color: C.gray } });
-  slide.addText("🔗  共享记忆层 + 消息总线 + 任务编排器", { x: 1.5, y: 4.2, w: 7, h: 0.8, fontSize: 14, fontFace: "Calibri", color: C.deep, align: "center", bold: true });
-}
-
-// ========== SLIDE 13: Session 3 Divider ==========
-addDivider("安装 OpenClaw", "Session 3  |  40 分钟  |  动手实验", "⚡");
-
-// ========== SLIDE 14: OpenClaw Architecture ==========
-{
-  const slide = addContent("OpenClaw 架构概览");
-  slide.addText([
-    { text: "OpenClaw 是什么？", options: { fontSize: 16, bold: true, color: C.deep, fontFace: "Georgia" } },
-    { text: "", options: { breakLine: true, fontSize: 6 } },
-    { text: "开源 AI Agent 平台，连接 GitHub Copilot 与 WeChat", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "支持多模型接入（GPT-4、Claude、本地模型）", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "插件化工具系统，可自定义扩展", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "内置记忆管理和任务规划引擎", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-    { text: "WeChat 作为用户交互界面", options: { bullet: true, fontSize: 13, color: C.darkText, fontFace: "Calibri", breakLine: true } },
-  ], { x: 0.5, y: 1.4, w: 5.5, h: 3.5, valign: "top" });
-
-  // Architecture stack
-  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.2, y: 1.5, w: 3.6, h: 3.6, rectRadius: 0.15, fill: { type: "solid", color: C.white }, shadow: { type: "outer", blur: 4, offset: 2, color: "CCCCCC" } });
-  const layers = [
-    { label: "WeChat 界面层", color: C.accent },
-    { label: "Agent 核心引擎", color: C.deep },
-    { label: "工具 & 插件层", color: C.teal },
-    { label: "LLM 模型层", color: C.mid },
-  ];
-  layers.forEach((l, i) => {
-    slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x: 6.5, y: 1.7 + i * 0.82, w: 3, h: 0.65, rectRadius: 0.08, fill: { type: "solid", color: l.color } });
-    slide.addText(l.label, { x: 6.5, y: 1.7 + i * 0.82, w: 3, h: 0.65, fontSize: 12, fontFace: "Calibri", color: C.white, align: "center", bold: true });
-  });
-}
-
-// ========== SLIDE 15: Install Steps ==========
-{
-  const slide = addContent("动手实验：安装 OpenClaw");
-  const steps = [
-    { num: "01", title: "环境准备", desc: "安装 Node.js 18+、Docker、Git" },
-    { num: "02", title: "克隆项目", desc: "git clone https://github.com/openclaw/openclaw" },
-    { num: "03", title: "配置环境变量", desc: "复制 .env.example → .env，填写 API Key" },
-    { num: "04", title: "启动服务", desc: "docker compose up -d" },
-    { num: "05", title: "连接 WeChat", desc: "扫码登录，完成 WeChat 绑定" },
-    { num: "06", title: "验证测试", desc: "在 WeChat 中发送消息，验证 Agent 响应" },
-  ];
-  steps.forEach((s, i) => {
-    const y = 1.4 + i * 0.72;
-    slide.addShape(pptx.shapes.OVAL, { x: 0.5, y, w: 0.55, h: 0.55, fill: { type: "solid", color: C.teal } });
-    slide.addText(s.num, { x: 0.5, y, w: 0.55, h: 0.55, fontSize: 13, fontFace: "Calibri", color: C.white, align: "center", valign: "middle", bold: true });
-    slide.addText(s.title, { x: 1.2, y, w: 2.2, h: 0.55, fontSize: 14, fontFace: "Georgia", color: C.deep, bold: true, valign: "middle" });
-    slide.addText(s.desc, { x: 3.4, y, w: 6.2, h: 0.55, fontSize: 12, fontFace: "Calibri", color: C.subText, valign: "middle" });
-  });
-}
-
-// ========== SLIDE 16: Thank You ==========
-{
-  const slide = pptx.addSlide();
-  slide.background = { fill: C.mid };
-  slide.addShape(pptx.shapes.OVAL, { x: -1, y: -1, w: 5, h: 5, fill: { type: "solid", color: C.deep }, transparency: 50 });
-  slide.addShape(pptx.shapes.OVAL, { x: 7, y: 3, w: 4, h: 4, fill: { type: "solid", color: C.teal }, transparency: 60 });
-  slide.addText("感谢参与！", { x: 1, y: 1.5, w: 8, h: 1.2, fontSize: 44, fontFace: "Georgia", color: C.white, bold: true, align: "center" });
-  slide.addText("Thank You & Q&A", { x: 1, y: 2.7, w: 8, h: 0.8, fontSize: 24, fontFace: "Calibri", color: C.teal, align: "center" });
-  slide.addShape(pptx.shapes.RECTANGLE, { x: 3.5, y: 3.6, w: 3, h: 0.06, fill: { type: "solid", color: C.teal } });
-  slide.addText("欢迎提问和交流 💬", { x: 1, y: 3.9, w: 8, h: 0.7, fontSize: 18, fontFace: "Calibri", color: "A0AEC0", align: "center" });
-}
-
-// Generate
-const outPath = require("path").join(__dirname, "agent-workshop.pptx");
-pptx.writeFile({ fileName: outPath }).then(() => {
-  console.log(`✅ PPT generated: ${outPath}`);
+const outPath = "/tmp/agent-workshop/slides/openclaw-on-azure.pptx";
+pres.writeFile({ fileName: outPath }).then(() => {
+  console.log("✅ Presentation saved to " + outPath);
 }).catch(err => {
-  console.error("❌ Error:", err);
+  console.error("Error:", err);
 });
